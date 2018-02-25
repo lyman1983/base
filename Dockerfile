@@ -1,4 +1,4 @@
-FROM ubuntu:14.04
+FROM ubuntu:16.04
 
 MAINTAINER lyu zhibin <lyuzb@lyuzb.com>
 
@@ -7,35 +7,44 @@ ARG PASSWD=passwd
 # 更新源
 RUN cp /etc/apt/sources.list /etc/apt/sources.list-bk \
  && { \
- 		echo 'deb http://mirrors.163.com/ubuntu/ trusty main restricted universe multiverse'; \
-		echo 'deb http://mirrors.163.com/ubuntu/ trusty-security main restricted universe multiverse'; \
-		echo 'deb http://mirrors.163.com/ubuntu/ trusty-updates main restricted universe multiverse'; \
-		echo 'deb http://mirrors.163.com/ubuntu/ trusty-proposed main restricted universe multiverse'; \
-		echo 'deb http://mirrors.163.com/ubuntu/ trusty-backports main restricted universe multiverse'; \
-		echo 'deb-src http://mirrors.163.com/ubuntu/ trusty main restricted universe multiverse'; \
-		echo 'deb-src http://mirrors.163.com/ubuntu/ trusty-security main restricted universe multiverse'; \
-		echo 'deb-src http://mirrors.163.com/ubuntu/ trusty-updates main restricted universe multiverse'; \
-		echo 'deb-src http://mirrors.163.com/ubuntu/ trusty-proposed main restricted universe multiverse'; \
-		echo 'deb-src http://mirrors.163.com/ubuntu/ trusty-backports main restricted universe multiverse'; \
+		echo 'deb http://mirrors.163.com/ubuntu/ xenial main restricted universe multiverse'; \
+		echo 'deb http://mirrors.163.com/ubuntu/ xenial-security main restricted universe multiverse'; \
+		echo 'deb http://mirrors.163.com/ubuntu/ xenial-updates main restricted universe multiverse'; \
+		echo 'deb http://mirrors.163.com/ubuntu/ xenial-proposed main restricted universe multiverse'; \
+		echo 'deb http://mirrors.163.com/ubuntu/ xenial-backports main restricted universe multiverse'; \
+		echo 'deb-src http://mirrors.163.com/ubuntu/ xenial main restricted universe multiverse'; \
+		echo 'deb-src http://mirrors.163.com/ubuntu/ xenial-security main restricted universe multiverse'; \
+		echo 'deb-src http://mirrors.163.com/ubuntu/ xenial-updates main restricted universe multiverse'; \
+		echo 'deb-src http://mirrors.163.com/ubuntu/ xenial-proposed main restricted universe multiverse'; \
+		echo 'deb-src http://mirrors.163.com/ubuntu/ xenial-backports main restricted universe multiverse'; \
     } > /etc/apt/sources.list \
 
 #设置容器时区为上海，以便和宿主机同步
- && cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
+ && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
 
 #更新到最新系统，并安装常用工具及服务
  && apt-get update \
  && apt-get upgrade -y \
- && apt-get install -y openssh-server openssh-client vim curl wget unzip dos2unix \
+ && apt-get install -y openssh-server openssh-client vim curl wget unzip dos2unix locales \
+
+# 安装并设置字符编码
+ && locale-gen zh_CN.UTF-8 \
+ && DEBIAN_FRONTEND=noninteractive dpkg-reconfigure locales \
+ && { \
+		echo 'export LANG=zh_CN.UTF-8'; \
+		echo 'export LANGUAGE=zh_CN:zh'; \
+		echo 'export LC_ALL=zh_CN.UTF-8'; \
+	} >> /etc/profile \
 
 #配置ssh及初始化root账号
  && mkdir /var/run/sshd \
- && sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config \
+ && sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config \
  && sed -i 's/UsePAM yes/UsePAM no/' /etc/ssh/sshd_config \
  && echo "root:$PASSWD" | chpasswd \
 
 # 安装supervisor工具
- && sudo apt-get install -y supervisor \
- && sudo mkdir -p /var/log/supervisor \
+ && apt-get install -y supervisor \
+ && mkdir -p /var/log/supervisor \
 
 # 清理安装包
  && rm -rf /var/lib/apt/lists/*
