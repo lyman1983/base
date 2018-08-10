@@ -48,5 +48,5 @@ RUN cp /etc/apt/sources.list /etc/apt/sources.list-bk \
 # 容器需要开放SSH 22端口
 EXPOSE 22
 
-# 执行supervisord来同时执行多个命令，使用 supervisord 的可执行路径启动服务。
+# 默认开启ssh服务
 CMD ["/usr/sbin/sshd", "-D"]
